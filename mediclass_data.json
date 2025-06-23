@@ -1,0 +1,28 @@
+{
+    "usuarios": [
+        {
+            "tipo": "Medico",
+            "nome": "Dr. Teste",
+            "registro_profissional": "CRM123",
+            "login": "med",
+            "_senha_hash": "b7e94be513e96e8c45cd23d162275e5a12ebde9100a425c4ebcdd7fa4dcd897c"
+        },
+        {
+            "tipo": "Enfermeiro",
+            "nome": "Enf. Teste",
+            "registro_profissional": "COREN456",
+            "login": "enf",
+            "_senha_hash": "b7e94be513e96e8c45cd23d162275e5a12ebde9100a425c4ebcdd7fa4dcd897c"
+        },
+        {
+            "tipo": "Tecnico",
+            "nome": "Tec. Teste",
+            "registro_profissional": "CRTR789",
+            "login": "tec",
+            "_senha_hash": "b7e94be513e96e8c45cd23d162275e5a12ebde9100a425c4ebcdd7fa4dcd897c"
+        }
+    ],
+    "pacientes": [
+    
+    ]
+}
