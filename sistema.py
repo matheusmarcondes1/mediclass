@@ -24,13 +24,15 @@ from paciente import Paciente
 
 class SistemaMediclass:
     def __init__(self):
-        # Armazenamento em memória
+        # armazenamento em memória de Profissionais (usuarios) e pacientes
         self.usuarios: dict[str, Profissional] = {}
         self.pacientes: dict[str, Paciente] = {}
-
+        
+    # adiciona usuario
     def registrar_usuario(self, usuario: Profissional) -> None:
         self.usuarios[usuario.login] = usuario
-
+        
+    # LOGIN
     def login(self) -> Profissional | None:
         login = input("Login: ")
         senha = input("Senha: ")
@@ -106,50 +108,57 @@ class SistemaMediclass:
 
 
     def op_triagem(self, usuario: Profissional) -> None:
-        if not isinstance(usuario, Enfermeiro):
+        if not isinstance(usuario, Enfermeiro):        # controla acesso ao método triagem para Enf
             print("Acesso negado. Apenas enfermeiros podem realizar triagem.")
             return
-        cpf = input("CPF do paciente: ")
+        cpf = input("CPF do paciente: ")               # busca paciente pelo CPF
         paciente = self.pacientes.get(cpf)
         if not paciente:
             print("Paciente não encontrado.")
             return
-        usuario.triagem(paciente)
+        usuario.triagem(paciente)                      # conduz triagem e retorna ao menu
         print("Triagem concluída.")
 
     def op_diagnostico(self, usuario: Profissional) -> None:
-        if not isinstance(usuario, Medico):
+        if not isinstance(usuario, Medico):            # controla acesso ao método para Med
             print("Acesso negado. Apenas médicos podem iniciar consultas.")
             return
-        cpf = input("CPF do paciente: ")
+        cpf = input("CPF do paciente: ")              # busca paciente pelo CPF
         paciente = self.pacientes.get(cpf)
         if not paciente:
             print("Paciente não encontrado.")
             return
         sugestoes = usuario.sugerir_diagnosticos(paciente)
-        if not sugestoes:
+        if not sugestoes:                             # caso Diagnostico nulo/inconclusivo
             print("Nenhum diagnóstico sugerido.")
             return
         print("--- Diagnósticos sugeridos ---")
-        for diag in sugestoes:
+        for diag in sugestoes:                        # printa possiveis Diagnosticos
             print(str(diag))
+
+        # PÓS CONSULTA
         if input("Deseja solicitar exame a um técnico? (S/N): ").strip().upper() == 'S':
             print("Solicitação enviada.")
             paciente.atualizar_historico("Solicitação de exame enviada ao técnico.")
+            
         if input("Deseja gerar receituário? (S/N): ").strip().upper() == 'S':
             usuario.gerar_receituario(paciente)
+            
         if input("Deseja gerar declaração de comparecimento? (S/N): ").strip().upper() == 'S':
             usuario.gerar_declaracao_comparecimento(paciente)
+            
         print("Consulta encerrada. Retornando ao menu.")
-        self.menu_principal(usuario)
+        self.menu_principal(usuario)                                # redundancia para retornar ao menu
         return
 
     def op_visualizar_prontuario(self, usuario: Profissional) -> None:
-        cpf = input("CPF do paciente: ")
+        cpf = input("CPF do paciente: ")                                    # busca paciente pelo CPF
         paciente = self.pacientes.get(cpf)
         if not paciente:
             print("Paciente não encontrado.")
             return
+
+        # imprime informações do prontuario no prompt
         print(f"\n=== Prontuário de {paciente.nome} ===")
         print(f"CPF: {paciente.cpf}")
         print(f"Contato: {paciente.contato}")
@@ -160,7 +169,7 @@ class SistemaMediclass:
         print(f"Prioritário: {'Sim' if paciente.prioritario else 'Não'}")
         print("\n--- Histórico Médico ---")
         print(paciente.consultar_historico())
-        if hasattr(paciente, 'ultima_anamnese') and paciente.ultima_anamnese:
+        if hasattr(paciente, 'ultima_anamnese') and paciente.ultima_anamnese:    # posta a ultima anamnese se existente
             print("\n--- Última Anamnese ---")
             for k, v in paciente.ultima_anamnese.to_dict().items():
                 print(f"{k}: {v}")
@@ -168,11 +177,13 @@ class SistemaMediclass:
             print("Nenhuma anamnese disponível.")
 
     def op_exportar_prontuario(self, usuario: Profissional) -> None:
-        cpf = input("CPF do paciente para exportação: ")
+        cpf = input("CPF do paciente para exportação: ")                        # busca paciente pelo cpf
         paciente = self.pacientes.get(cpf)
         if not paciente:
             print("Paciente não encontrado.")
-            return
+            return   
+
+        # cria arquivo para exportacao com dados registrados
         filename = f"prontuario_{paciente.cpf}.txt"
         conteudo = [
             f"Prontuário de {paciente.nome}",
@@ -186,7 +197,8 @@ class SistemaMediclass:
             "\nHistórico Médico:",
             paciente.consultar_historico()
         ]
-        if hasattr(paciente, 'ultima_anamnese') and paciente.ultima_anamnese:
+
+        if hasattr(paciente, 'ultima_anamnese') and paciente.ultima_anamnese:    # coloca informações da ultima anamnese (se existente) no arquivo
             conteudo.append("\nÚltima Anamnese:")
             for k, v in paciente.ultima_anamnese.to_dict().items():
                 conteudo.append(f"{k}: {v}")
@@ -195,10 +207,12 @@ class SistemaMediclass:
         print(f"Prontuário exportado para {filename}")
 
     def op_adicionar_exame(self, usuario: Profissional) -> None:
-        if not isinstance(usuario, Tecnico):
+        
+        if not isinstance(usuario, Tecnico):        # controla acesso ao método para Tec
             print("Acesso negado. Apenas técnicos podem adicionar exames.")
             return
-        cpf = input("CPF do paciente para adicionar exame: ")
+            
+        cpf = input("CPF do paciente para adicionar exame: ")    # busca paciente pelo CPF
         paciente = self.pacientes.get(cpf)
         if not paciente:
             print("Paciente não encontrado.")
