@@ -5,9 +5,9 @@ Parte do Trabalho Prático de ELE078
 Arquivo: profissionais.py
 Autor: Matheus Marcondes <matheusmarcondes@ufmg.br>
 Data de criação: 2025-06-21
-Descrição:
-    Módulo responsável pela superclasse Profissional e subclasses Medico, Enfermeiro e Tecnico,
-    incluindo encapsulamento de atributos protegidos, métodos de login, hash de senha e lógica de decisão clínica.
+Descrição: Módulo responsável pela superclasse Profissional e subclasses Medico, Enfermeiro e Tecnico,
+    incluindo encapsulamento de atributos protegidos, login com hash de senha e implementa a árvore de decisão.
+   >>> As funções de Triagem, COnsulta e Exame são métodos de cada uma das subclasses de Profissional e estão definidas neste módulo.
 Repositório: 
 Licença: MIT License
 Dependências:
@@ -23,10 +23,8 @@ from diagnostico import Diagnostico
 from datetime import date, datetime
 
 
-class Profissional:
-    """
-    Superclasse para usuários profissionais do sistema Mediclass.
-    """
+class Profissional:        # Superclasse para usuários profissionais do sistema Mediclass
+ 
     def __init__(self, nome: str, registro_profissional: str, login: str, senha: str):
         self.nome = nome
         self.registro_profissional = registro_profissional
@@ -46,17 +44,16 @@ class Profissional:
         raise NotImplementedError("Implementar edição de paciente")
 
 class Medico(Profissional):
-    """
-    Profissional com permissões de médico, capaz de sugerir diagnósticos.
-    """
+
+        # MÉTODO CONSULTA: ÁRVORE DE DECISÃO PARA SUGESTÃO DE DIAGNÓSTICO:
     def sugerir_diagnosticos(self, paciente: Paciente) -> list[Diagnostico]:
-        anamnese = getattr(paciente, 'ultima_anamnese', None)
+        anamnese = getattr(paciente, 'ultima_anamnese', None)    # pega a ultima anamnese do paciente
         if not anamnese:
             print("Nenhuma triagem disponível para este paciente.")
-            return []
+            return []                                            # se nao fez, retorna Diagnostico nulo
 
         sugestoes: list[Diagnostico] = []
-        tipo = anamnese.tipo_sintoma
+        tipo = anamnese.tipo_sintoma                             # o tipo (de sintoma) é buscado do processo de triagem/anamnese
 
         # Gastrointestinal
         if tipo == TipoSintoma.GASTROINTESTINAL:
@@ -166,48 +163,50 @@ class Medico(Profissional):
                 if input("Febre >38°C por >3 semanas? (S/N): ").strip().upper() == 'S':
                     sugestoes.append(Diagnostico('Outros', 'Febre de origem indeterminada', ['Hemoculturas', 'Marcadores inflamatórios', 'Hemograma']))
 
-        # Imprime os diagnósticos sugeridos antes de qualquer outra ação
-        if sugestoes:
+        if sugestoes:                   # caso exista uma sugestao gerada pela arvore (sugestoes == True)
             print("\n--- Diagnósticos sugeridos ---")
             for diag in sugestoes:
-                print(str(diag))
+                print(str(diag))        # printa a string de Diagnosticos
         else:
             print("Nenhum diagnóstico sugerido.")
 
-        # Pergunta ao médico sobre agendamento de exame
+        # pergunta ao médico sobre agendamento de exame
         if input("\nDeseja solicitar exame a um técnico? (S/N): ").strip().upper() == 'S':
             print("Solicitação enviada.")
             paciente.atualizar_historico("Solicitação de exame enviada ao técnico.")
 
-        # Pergunta ao médico se deseja gerar receituário
+        # pergunta ao médico se deseja gerar receituário
         if input("Deseja gerar receituário? (S/N): ").strip().upper() == 'S':
             self.gerar_receituario(paciente)
 
-        # Pergunta ao médico se deseja gerar declaração de comparecimento
+        # pergunta ao médico se deseja gerar declaração de comparecimento
         if input("Deseja gerar declaração de comparecimento? (S/N): ").strip().upper() == 'S':
             self.gerar_declaracao_comparecimento(paciente)
 
-        return sugestoes
+        return []    # retorna nulo depois de concluir a consulta, retorna ao menu principal
 
 
     def gerar_receituario(self, paciente: Paciente) -> None:
-        """
-        Loop para inserir medicamentos, gravar histórico e exportar receituário em TXT com cabeçalho.
-        """
+        
+        # coleta das info dos medicamentos (nome, posologia, intervalo, tempo de tratamento
         prescricoes: List[tuple[str, str, str, str]] = []
         print("Iniciando prescrição. Digite 0 para finalizar.")
+
+        # loop para adicionar medicamentos, se encerra quando entrada de nome do modicamento é nulo
         while True:
             med = input("Nome da medicação (ou 0 para terminar): ").strip()
             if med == '0':
                 break
             pos = input("Posologia [miligramas]: ")
-            intervalo = input("intervalo das doses [horas]: ")
+            intervalo = input("Intervalo das doses [horas]: ")
             periodo = input("Período de tratamento [dias]: ")
             prescricoes.append((med, pos, intervalo, periodo))
             paciente.atualizar_historico(
                 f"Prescrição adicionada em {datetime.now().strftime('%Y-%m-%d %H:%M')}: {med}, {pos}, {intervalo}, {periodo}"
             )
         filename = f"receituario_{paciente.cpf}.txt"
+        
+        # criacao do arquivo a ser exportado com cabeçalho
         with open(filename, 'w', encoding='utf-8') as f:
             f.write("Hospital da Escola de Engenharia da UFMG\nSistema MediClass\n")
             f.write(f"Prescrição gerada em {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n")
@@ -216,15 +215,14 @@ class Medico(Profissional):
             for med, pos, intervalo, periodo in prescricoes:
                 f.write(f"- {med}: {pos}mg a cada {intervalo} horas, durante {periodo} dias;\n")
             f.write(f"{self.nome} - CRM {self.registro_profissional}\n")
-        print(f"Receituário exportado para {filename}")
-
+        print(f"Receituário exportado para {filename}")    # mensagem de sucesso para o usuario
+        
+        # gerar a declaracao de comparecimento é uma função que não depende de enrtadas do usuário
     def gerar_declaracao_comparecimento(self, paciente: Paciente) -> None:
-        """
-        Gera declaração de comparecimento em TXT com cabeçalho e texto detalhado.
-        """
+
         data = datetime.now().strftime('%Y-%m-%d')
         hora = datetime.now().strftime('%H:%M')
-        tipo = paciente.ultima_anamnese.tipo_sintoma.value if hasattr(paciente, 'ultima_anamnese') else 'não especificado'
+        tipo = paciente.ultima_anamnese.tipo_sintoma.value if hasattr(paciente, 'ultima_anamnese') else 'não especificado'    # busca o tipo (se houver) de sintoma para colocar no atestado
         filename = f"declaracao_{paciente.cpf}.txt"
         with open(filename, 'w', encoding='utf-8') as f:
             f.write("Hospital da Escola de Engenharia da UFMG\nSistema MediClass\n")
@@ -237,64 +235,80 @@ class Medico(Profissional):
         paciente.atualizar_historico(
             f"Declaração de comparecimento gerada em {data} às {hora}."
         )
-        print(f"Declaração exportada para {filename}")
+        print(f"Declaração exportada para {filename}") # mensagem de sucesso para o usuario
 
 
-class Enfermeiro(Profissional):
-    """
-    Profissional com permissões de enfermeiro, responsável pela triagem.
-    """
+class Enfermeiro(Profissional):       # Profissional com permissões de enfermeiro, responsável pela Triagem
+    
     def triagem(self, paciente: Paciente) -> None:
-        prioridade = False
+        prioridade = False            # flag de prioridade é inicialmente 0
+        
         # frequência cardíaca (40-200 bpm)
-        while True:
+        while True:                    # solicita entrada int entre 40 e 200, inclusive. só para de solicitar quando um valor válido é inserido
             try:
                 fc = int(input("frequência cardíaca (40-200 bpm): "))
                 if 40 <= fc <= 200:
                     break
-                print("Valor fora da faixa válida (40-200). Tente novamente.")
+                print("Valor fora da faixa válida (40-200). Tente novamente.")    # mensagem de erro no valor inserido (fora da faixa aceitavel de F.C.)
             except ValueError:
-                print("Entrada inválida. Digite um número inteiro.")
+                print("Entrada inválida. Digite um número inteiro.")    # mensagem de erro no valor inserido (entrada não-int)
+       
+        # ativacao da flag de prioridade para valores VÁLIDOS mas incomuns
         if fc < 70 or fc > 120:
             print("frequência cardíaca incomum! Ativando prioridade.")
             prioridade = True
+
+        
         # Pressão arterial sistólica (70-250 mmHg)
         while True:
             try:
                 ps = int(input("Pressão arterial sistólica (70-250 mmHg): "))
                 if 70 <= ps <= 250:
                     break
-                print("Valor fora da faixa válida (70-250). Tente novamente.")
+                print("Valor fora da faixa válida (70-250). Tente novamente.")    # mensagem de erro no valor inserido (fora da faixa aceitavel de P.s.)
             except ValueError:
-                print("Entrada inválida. Digite um número inteiro.")
+                print("Entrada inválida. Digite um número inteiro.")    # mensagem de erro no valor inserido (entrada não-int)
+    
+        # ativacao da flag de prioridade para valores VÁLIDOS mas incomuns
         if ps < 90 or ps > 140:
             print("Pressão sistólica incomum! Ativando prioridade.")
             prioridade = True
+
+        
         # Pressão arterial diastólica (40-150 mmHg)
         while True:
             try:
                 pd = int(input("Pressão arterial diastólica (40-150 mmHg): "))
                 if 40 <= pd <= 150:
                     break
-                print("Valor fora da faixa válida (40-150). Tente novamente.")
+                print("Valor fora da faixa válida (40-150). Tente novamente.")    # mensagem de erro no valor inserido (fora da faixa aceitavel de P.d.)
             except ValueError:
-                print("Entrada inválida. Digite um número inteiro.")
+                print("Entrada inválida. Digite um número inteiro.")    # mensagem de erro no valor inserido (entrada não-int)
+     
+        # ativacao da flag de prioridade para valores VÁLIDOS mas incomuns
         if pd < 60 or pd > 90:
             print("Pressão diastólica incomum! Ativando prioridade.")
             prioridade = True
+        
         # Oximetria (85-100%)
         while True:
             try:
                 ox = int(input("Oximetria de pulso (85-100%): "))
                 if 85 <= ox <= 100:
                     break
-                print("Valor fora da faixa válida (85-100). Tente novamente.")
+                print("Valor fora da faixa válida (85-100). Tente novamente.")    # mensagem de erro no valor inserido (fora da faixa aceitavel de S(O2)
             except ValueError:
-                print("Entrada inválida. Digite um número inteiro.")
+                print("Entrada inválida. Digite um número inteiro.")    # mensagem de erro no valor inserido (entrada não-int)
+                
+        # ativacao da flag de prioridade para valores VÁLIDOS mas incomuns
         if ox < 95:
             print("Oximetria incomum! Ativando prioridade.")
             prioridade = True
-        # Tipo de sintoma
+
+        #NOTA: é importante tomar cuidado para que dois valores incomuns de sinais vitais não se anulem e mantenham a flag como False
+
+        
+        # busca, lista, enumera e apresenta os tipos de sintoma para fazer um menu
         tipos = list(TipoSintoma)
         print("Selecione o tipo de sintoma:")
         for i, t in enumerate(tipos, 1):
@@ -309,7 +323,7 @@ class Enfermeiro(Profissional):
             except ValueError:
                 print("Entrada inválida. Digite um número inteiro.")
        
-        # Perguntas de anamnese (sim/não) específicas por tipo de sintoma
+        # lista as perguntas de anamnese (sim/não) específicas por tipo de sintoma
         if tipo == TipoSintoma.GASTROINTESTINAL:
             perguntas = [
                 "náuseas ou vômitos",
@@ -318,7 +332,7 @@ class Enfermeiro(Profissional):
                 "dor abdominal",
                 "perda de peso inexplicada",
                 "febre"
-            ]  # Common GI topics: nausea/vomiting, diarrhea, constipation, pain; alarm signs: weight loss, fever :contentReference[oaicite:0]{index=0}
+            ]
         elif tipo == TipoSintoma.RESPIRATORIO:
             perguntas = [
                 "tosse",
@@ -327,28 +341,28 @@ class Enfermeiro(Profissional):
                 "hemoptise",
                 "dor torácica",
                 "febre"
-            ]  # Ask about cough character, sputum, hemoptysis, dyspnea, chest pain, fever :contentReference[oaicite:1]{index=1}
+            ]
         elif tipo == TipoSintoma.CARDIOVASCULAR:
             perguntas = [
                 "dor torácica opressiva",
                 "palpitações",
                 "tontura ou desmaio",
                 "edema de membros inferiores"
-            ]  # Chest pain, palpitations, syncope/dizziness, peripheral edema :contentReference[oaicite:2]{index=2}
+            ]
         elif tipo == TipoSintoma.TRAUMA:
             perguntas = [
                 "perda de consciência",
                 "sangramento ativo",
                 "deformidade visível",
                 "incapacidade de mover a área afetada"
-            ]  # Mechanism, LOC, bleeding, deformity, functional loss :contentReference[oaicite:3]{index=3}
+            ]
         elif tipo == TipoSintoma.DERMATOLOGICO:
             perguntas = [
                 "lesão cutânea",
                 "prurido",
                 "dor na pele",
                 "febre"
-            ]  # Rash location/appearance, itch, pain, fever :contentReference[oaicite:4]{index=4}
+            ]
         else:  # OUTROS
             perguntas = [
                 "déficit motor ou sensitivo",
@@ -356,23 +370,31 @@ class Enfermeiro(Profissional):
                 "taquicardia e ansiedade",
                 "febre sem foco >3 semanas"
             ]  # Neurológico, endocrino, psiquiátrico e febre de origem indeterminada
+            
+        # dicionario para salvar as respostas e formatação das perguntas para apresentar no promtp
         respostas: dict[str, bool] = {}
         for p in perguntas:
             while True:
-                resp = input(f"{p.capitalize()} (S/N): ").strip().upper()
+                resp = input(f"{p.capitalize()} (S/N): ").strip().upper()       # garante que is not case-sensitive (apenas para S e N)
                 if resp in ('S', 'N'):
                     respostas[p] = (resp == 'S')
                     break
-                print("Resposta inválida. Digite S ou N.")
-        # Cria objeto Anamnese e atualiza histórico
-        anamnese = Anamnese(fc, f"{ps}/{pd}", ox, respostas, tipo)
-        paciente.atualizar_historico(f"Triagem: {anamnese.to_dict()}")
+                print("Resposta inválida. Digite S ou N.")        # mensagem de erro
+
+        
+        # cria objeto Anamnese e atualiza histórico
+        anamnese = Anamnese(fc, f"{ps}/{pd}", ox, respostas, tipo)        # atributos são os sinais vitais (com pressão arterial concatenada)
+        paciente.atualizar_historico(f"Triagem: {anamnese.to_dict()}")    # atualiza o historico com anamnese recente
+
+
         if prioridade:
-            paciente.prioritario = True
-            paciente.atualizar_historico("FLAG: Prioridade ativada devido a valores incomuns.")
-        # Armazena última anamnese no paciente
+            paciente.prioritario = True                                                            # altera flag da prioridade (variavel de Paciente)
+            paciente.atualizar_historico("FLAG: Prioridade ativada devido a valores incomuns.")    # adiciona no historico
+            
+        # sobrescreve a ultima anamnese
         paciente.ultima_anamnese = anamnese
 
+# enum dos tipos de exame que o sistema pode sugerir, logo, os que um Tec pode realizar
 class ExamType(Enum):
     ULTRASSON_ABDOMINAL = 'Ultrassonografia abdominal'
     HEMOGRAMA = 'Hemograma'
@@ -398,14 +420,11 @@ class ExamType(Enum):
     MARCADORES_INFLAMATORIOS = 'Marcadores inflamatórios'
     AVALIACAO_PSIQUIATRICA = 'Avaliação psiquiátrica'
 
-class Tecnico(Profissional):
-    """
-    Profissional com permissões de técnico, responsável por adicionar exames.
-    """
+class Tecnico(Profissional):        # Profissional com permissões de técnico, responsável por adicionar exames
+    
     def adicionar_exame_sistema(self, paciente: Paciente) -> None:
-        """
-        Permite ao técnico selecionar um tipo de exame pré-definido e registrar seu resultado.
-        """
+
+        # cria um menu com o enum dos exames disponíveis
         print("Selecione o tipo de exame a adicionar:")
         tipos = list(ExamType)
         for idx, exame in enumerate(tipos, 1):
@@ -416,9 +435,11 @@ class Tecnico(Profissional):
                 if 1 <= escolha <= len(tipos):
                     exame = tipos[escolha-1].value
                     break
-                print("Opção inválida. Tente novamente.")
+                print("Opção inválida. Tente novamente.")        # mensagem de erro para valores inexistentes
             except ValueError:
-                print("Entrada inválida. Digite um número inteiro.")
+                print("Entrada inválida. Digite um número inteiro.")    # mensagem de erro para entrada inválida
+
+        # variavel resultado (não especificada) é inserida pelo usuario, exame é selecionado
         resultado = input("Resultado do exame: ")
-        paciente.adicionar_exame(exame, resultado)
-        print(f"Exame '{exame}' com resultado '{resultado}' adicionado ao histórico.")
+        paciente.adicionar_exame(exame, resultado)        # metodo de Paciente adiciona exame ao histórico
+        print(f"Exame '{exame}' com resultado '{resultado}' adicionado ao histórico.")    # mensagem de sucesso para usuario
