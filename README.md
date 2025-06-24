@@ -59,3 +59,7 @@ O projeto está organizado em seis módulos Python:
    ```bash
    git clone https://github.com/matheusmarcondes1/mediclass.git
    cd mediclass
+
+## Documentação
+![Manual e descrição](https://github.com/matheusmarcondes1/mediclass/blob/main/manual%20e%20descricao%20mediclass.pdf)
+![Relatório](https://github.com/matheusmarcondes1/mediclass/blob/main/relatorio%20projeto%20mediclass.pdf)
