@@ -1,12 +1,12 @@
+![Logo do MediClass](1.png)
 # MediClass
 
 Sistema de Prontuário Eletrônico e Apoio à Decisão Clínica em Python.
 
 ## Visão Geral
 
-MediClass é uma aplicação de linha de comando que permite gerenciar prontuários eletrônicos de pacientes, realizar triagens de enfermagem, apoiar decisões clínicas com sugestões de diagnóstico, gerar receituários e declarações de comparecimento, além de registrar exames laboratoriais ou de imagem. Foi desenvolvido como um exercício prático dos conceitos de Programação Orientada a Objetos (POO): encapsulamento, herança, abstração e polimorfismo :contentReference[oaicite:0]{index=0}.
-
-> “Este artigo apresenta o MediClass, um sistema de prontuário eletrônico e apoio à decisão clínica implementado em Python, que aplica os pilares da Programação Orientada a Objetos […]” :contentReference[oaicite:1]{index=1}
+MediClass é uma aplicação de linha de comando que permite gerenciar prontuários eletrônicos de pacientes, realizar triagens de enfermagem, apoiar decisões clínicas com sugestões de diagnóstico, gerar receituários e declarações de comparecimento, além de registrar exames laboratoriais ou de imagem. Foi desenvolvido como um exercício prático dos conceitos de Programação Orientada a Objetos (POO): encapsulamento, herança, abstração e polimorfismo
+> “Este artigo apresenta o MediClass, um sistema de prontuário eletrônico e apoio à decisão clínica implementado em Python, que aplica os pilares da Programação Orientada a Objetos […]”
 
 ## Funcionalidades Principais
 
@@ -51,7 +51,7 @@ O projeto está organizado em seis módulos Python:
 ## Pré-requisitos
 
 - Python 3.8 ou superior  
-- Bibliotecas da [stdlib]: `json`, `hashlib`, `enum`, `datetime`, `os`
+- Bibliotecas [stdlib]: `json`, `hashlib`, `enum`, `datetime`, `os`
 
 ## Instalação
 
